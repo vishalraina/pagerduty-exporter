@@ -5,6 +5,7 @@ import (
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/prometheus/client_golang/prometheus"
 	prometheusCommon "github.com/webdevops/go-prometheus-common"
+	"strings"
 )
 
 type MetricsCollectorUser struct {
@@ -34,6 +35,7 @@ func (m *MetricsCollectorUser) Setup(collector *CollectorGeneral) {
 			"userJobTitle",
 			"userRole",
 			"userTimezone",
+			"userTeam",
 		},
 	)
 
@@ -66,6 +68,12 @@ func (m *MetricsCollectorUser) Collect(ctx context.Context, callback chan<- func
 		}
 
 		for _, user := range list.Users {
+			user_teams := make([]string, 0)
+			//summaries := make([]string, 0)
+			for _, team := range user.Teams {
+				user_teams = append(user_teams, team.APIObject.Summary)
+			}
+
 			userMetricList.AddInfo(prometheus.Labels{
 				"userID":       user.ID,
 				"userName":     user.Name,
@@ -75,6 +83,7 @@ func (m *MetricsCollectorUser) Collect(ctx context.Context, callback chan<- func
 				"userJobTitle": user.JobTitle,
 				"userRole":     user.Role,
 				"userTimezone": user.Timezone,
+				"userTeam":     strings.Join(user_teams, ","),
 			})
 		}
 
